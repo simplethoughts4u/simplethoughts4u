@@ -7,9 +7,6 @@ app = Flask(__name__)
 MAIL_TM_API = "https://api.mail.tm"
 SESSION = requests.Session()
 
-@app.route("/")
-def home():
-    return "Hello, Flask on Render!"
     
 def create_temp_email():
     """Generates a new temporary email and returns credentials."""
