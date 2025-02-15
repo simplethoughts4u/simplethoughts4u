@@ -8,7 +8,7 @@ MAIL_TM_API = "https://api.mail.tm"
 SESSION = requests.Session()
 
     
-def create_temp_email():
+def create_temp_email():    
     """Generates a new temporary email and returns credentials."""
     domain = SESSION.get(f"{MAIL_TM_API}/domains").json()["hydra:member"][0]["domain"]
     email = f"user{int(time.time())}@{domain}"
