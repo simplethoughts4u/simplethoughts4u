@@ -1,8 +1,12 @@
-import os
 from flask import Flask, jsonify, request, send_from_directory
+import os
 from flask_cors import CORS
 import requests
 import time
+
+@app.route("/")
+def serve_index():
+    return send_from_directory("static", "index.html")
 
 app = Flask(__name__, static_folder="static", static_url_path="/")
 CORS(app)  # Allows cross-origin requests
@@ -56,7 +60,7 @@ def generate_email():
 @app.route("/inbox", methods=["POST"])
 def fetch_inbox():
     """Fetches inbox emails for a given email token."""
-    token = request.json.get("token")
+    token = request.json.get("token")	
     if not token:
         return jsonify({"error": "Token is required"}), 400
 
