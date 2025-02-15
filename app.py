@@ -1,16 +1,31 @@
-from flask import Flask, jsonify, request
+import os
+from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
 import requests
 import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", static_url_path="/")
+CORS(app)  # Allows cross-origin requests
 
 MAIL_TM_API = "https://api.mail.tm"
 SESSION = requests.Session()
 
-    
-def create_temp_email():    
+def get_domain():
+    """Fetches the first available domain from Mail.tm"""
+    try:
+        response = SESSION.get(f"{MAIL_TM_API}/domains").json()
+        if "hydra:member" in response and len(response["hydra:member"]) > 0:
+            return response["hydra:member"][0]["domain"]
+    except Exception as e:
+        print("Error fetching domain:", e)
+    return None
+
+def create_temp_email():
     """Generates a new temporary email and returns credentials."""
-    domain = SESSION.get(f"{MAIL_TM_API}/domains").json()["hydra:member"][0]["domain"]
+    domain = get_domain()
+    if not domain:
+        return None  # No available domains
+
     email = f"user{int(time.time())}@{domain}"
     password = "randompassword"
 
@@ -18,9 +33,17 @@ def create_temp_email():
     response = SESSION.post(f"{MAIL_TM_API}/accounts", json=payload)
 
     if response.status_code == 201:
-        token = SESSION.post(f"{MAIL_TM_API}/token", json=payload).json()["token"]
-        return {"email": email, "password": password, "token": token}
-    return None
+        token_response = SESSION.post(f"{MAIL_TM_API}/token", json=payload)
+        if token_response.status_code == 200:
+            token = token_response.json().get("token")
+            return {"email": email, "password": password, "token": token}
+
+    return None  # Return None if creation or token fetching fails
+
+@app.route("/")
+def serve_index():
+    """Serves the frontend (index.html)."""
+    return send_from_directory("static", "index.html")
 
 @app.route("/generate-email", methods=["GET"])
 def generate_email():
@@ -34,9 +57,16 @@ def generate_email():
 def fetch_inbox():
     """Fetches inbox emails for a given email token."""
     token = request.json.get("token")
+    if not token:
+        return jsonify({"error": "Token is required"}), 400
+
     headers = {"Authorization": f"Bearer {token}"}
-    inbox = SESSION.get(f"{MAIL_TM_API}/messages", headers=headers).json()
-    return jsonify(inbox)
+    try:
+        inbox = SESSION.get(f"{MAIL_TM_API}/messages", headers=headers).json()
+        return jsonify(inbox)
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch inbox: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))  # Use Render's assigned port
+    app.run(host="0.0.0.0", port=port, debug=True)

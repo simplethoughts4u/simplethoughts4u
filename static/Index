@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporary Email</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }
+        button { margin-top: 10px; padding: 10px; background: blue; color: white; border: none; cursor: pointer; }
+        #emailBox { margin-top: 20px; padding: 10px; background: lightgray; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Temporary Email</h2>
+        <button onclick="generateEmail()">Generate Email</button>
+        <div id="emailBox"></div>
+        <button onclick="checkInbox()">Check Inbox</button>
+        <div id="inbox"></div>
+    </div>
+
+    <script>
+        let email, token;
+
+        function generateEmail() {
+            fetch('/generate-email')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("Error generating email!");
+                        return;
+                    }
+                    email = data.email;
+                    token = data.token;
+                    document.getElementById("emailBox").innerHTML = `<strong>Email:</strong> ${email}`;
+                });
+        }
+
+        function checkInbox() {
+            if (!token) {
+                alert("Generate an email first!");
+                return;
+            }
+
+            fetch('/inbox', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let inboxDiv = document.getElementById("inbox");
+                inboxDiv.innerHTML = "<h3>Inbox</h3>";
+
+                if (!data['hydra:member'] || data['hydra:member'].length === 0) {
+                    inboxDiv.innerHTML += "<p>No new emails.</p>";
+                } else {
+                    data['hydra:member'].forEach(msg => {
+                        inboxDiv.innerHTML += `<p><strong>From:</strong> ${msg.from.address} <br> <strong>Subject:</strong> ${msg.subject}</p>`;
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
