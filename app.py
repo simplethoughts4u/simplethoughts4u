@@ -44,11 +44,6 @@ def create_temp_email():
 
     return None  # Return None if creation or token fetching fails
 
-@app.route("/")
-def serve_index():
-    """Serves the frontend (index.html)."""
-    return send_from_directory("static", "index.html")
-
 @app.route("/generate-email", methods=["GET"])
 def generate_email():
     """Endpoint to generate and return a temporary email."""
