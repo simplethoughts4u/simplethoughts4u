@@ -7,9 +7,6 @@ import time
 app = Flask(__name__, static_folder="static", static_url_path="/")  # ✅ Define the app here before using it!
 CORS(app)  # Enable Cross-Origin Resource Sharing
 
-@app.route("/")
-def serve_index():
-    return send_from_directory("static", "index.html")
 
 MAIL_TM_API = "https://api.mail.tm"
 SESSION = requests.Session()
@@ -43,6 +40,10 @@ def create_temp_email():
             return {"email": email, "password": password, "token": token}
 
     return None  # Return None if creation or token fetching fails
+
+@app.route("/")
+def serve_index():
+    return send_from_directory("static", "index.html")
 
 @app.route("/generate-email", methods=["GET"])
 def generate_email():
