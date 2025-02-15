@@ -42,6 +42,10 @@ def create_temp_email():
     return None  # Return None if creation or token fetching fails
 
 @app.route("/")
+def home():
+    return "Hello, Flask is running!"
+
+@app.route("/")
 def serve_index():
     return send_from_directory("static", "index.html")
 
