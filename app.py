@@ -4,12 +4,12 @@ from flask_cors import CORS
 import requests
 import time
 
+app = Flask(__name__, static_folder="static", static_url_path="/")  # ✅ Define the app here before using it!
+CORS(app)  # Enable Cross-Origin Resource Sharing
+
 @app.route("/")
 def serve_index():
     return send_from_directory("static", "index.html")
-
-app = Flask(__name__, static_folder="static", static_url_path="/")
-CORS(app)  # Allows cross-origin requests
 
 MAIL_TM_API = "https://api.mail.tm"
 SESSION = requests.Session()
